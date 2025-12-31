@@ -1,4 +1,10 @@
-﻿using PuppeteerSharp;
+﻿#:property Nullable=disable
+#:property PublishAot=false
+
+#:package PuppeteerSharp@20.2.2
+#:package StackExchange.Redis@2.9.11
+
+using PuppeteerSharp;
 using StackExchange.Redis;
 using System.Diagnostics;
 using System.Text.Json;

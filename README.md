@@ -21,7 +21,7 @@
     			"Password": "111"
     		}
     	],
-    	"ScKey": "", //server酱sckey，不填不开启
+    	"ScKey": "", //见 通知方式
     	"ScType": "Failed", //通知类型. Always:始终通知; Failed:失败时通知; 不填/其他:不通知;
     	"RdsServer": "xxx.redislabs.com:1234", //redis地址，选填
     	"RdsPwd": "ppp" //redis密码，选填
@@ -29,6 +29,27 @@
     ```
     - `RdsServer`和`RdsPwd`是选填的，用于配置redis，来存储cookie。后续可以重用这个cookie，避免频繁登录账号。建议配置一下，可以使用[redislabs](https://app.redislabs.com/)的免费套餐。
     - `JsUrl`和`LoginStr`这2个字段是用来登录账号的，已经设置好了默认值，**不建议**修改，所以上面的配置中没有列出来。详细请查看源码。
+
+### 通知方式
+
+2025-8-22 支持**执行命令**进行通知，你可以使用自己喜欢的通知方式，只需要把`通知命令`填写到`Conf`的`ScKey`字段。
+
+**占位符**会被替换为`实际的消息`（当然你也可以写死）：
+- `$title`：标题，默认是`Note163Checkin`。
+- `$msg`：运行结果。
+
+下面是2个例子：
+- server酱（`$title`被写死为`有道云笔记签到`了）：
+    ```
+	"ScKey": "curl -G \"https://sctapi.ftqq.com/你的Token.send\" --data-urlencode \"title=有道云笔记签到\" --data-urlencode \"desp=$msg\"",
+	"ScType": "Always",
+    ```
+
+- pushplus：
+    ```
+	"ScKey": "curl -G \"https://www.pushplus.plus/send?token=你的Token&title=$title\" --data-urlencode \"content=$msg\"",
+	"ScType": "Always",
+    ```
 
 **步骤图示如下：**
 ![添加secret](https://img.guoqianfan.com/note/2020/08/添加secret.png)
