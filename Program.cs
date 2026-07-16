@@ -1,8 +1,8 @@
 ﻿#:property Nullable=disable
 #:property PublishAot=false
 
-#:package PuppeteerSharp@20.2.2
-#:package StackExchange.Redis@2.9.11
+#:package PuppeteerSharp@25.3.3
+#:package StackExchange.Redis@3.0.17
 
 using PuppeteerSharp;
 using StackExchange.Redis;
@@ -11,7 +11,12 @@ using System.Text.Json;
 
 const int TIMEOUT_MS = 60_000;
 
-Conf _conf = Deserialize<Conf>(GetEnvValue("CONF"));
+string confStr = GetEnvValue("CONF");
+if (File.Exists(confStr))
+{
+    confStr = await File.ReadAllTextAsync(confStr);
+}
+Conf _conf = Deserialize<Conf>(confStr);
 HttpClient _scClient = new();
 
 #region redis
@@ -51,7 +56,7 @@ for (int i = 0; i < _conf.Users.Length; i++)
             var redisValue = await db.StringGetAsync(redisKey);
             if (redisValue.HasValue)
             {
-                cookie = redisValue.ToString();
+                cookie = redisValue.ToString().Trim();
                 (isInvalid, result) = await IsInvalid(cookie);
                 Console.WriteLine("redis获取cookie,状态:{0}", isInvalid ? "无效" : "有效");
             }
@@ -71,7 +76,7 @@ for (int i = 0; i < _conf.Users.Length; i++)
 
         if (isRedis)
         {
-            Console.WriteLine($"redis更新cookie:{await db.StringSetAsync(redisKey, cookie)}");
+            Console.WriteLine($"redis更新cookie:{await db.StringSetAsync(redisKey, cookie.Trim())}");
         }
     }
 
@@ -126,7 +131,7 @@ async Task<string> GetCookie(User user)
     {
         Headless = false,
         DefaultViewport = null,
-        ExecutablePath = @"/usr/bin/google-chrome"
+        ExecutablePath = GetEnvValue("GITHUB_ACTIONS") == "true" ? @"/usr/bin/google-chrome" : _conf.ChromePath
     };
     var browser = await Puppeteer.LaunchAsync(launchOptions);
     IPage page = await browser.DefaultContext.NewPageAsync();
@@ -293,6 +298,7 @@ class Conf
     public string ScType { get; set; }
     public string RdsServer { get; set; }
     public string RdsPwd { get; set; }
+    public string ChromePath { get; set; } = @"C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe";
     public string LoginUrl { get; set; } = "https://note.youdao.com/mobileSignIn/login_mobile.html?&back_url=https://note.youdao.com/web/&from=web";
     public string LoginStr { get; set; } = "signIn";
     public string JsUrl { get; set; } = "https://github.com/BlueHtml/pub/raw/main/code/js/note163login.js";
